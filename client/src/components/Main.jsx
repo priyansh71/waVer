@@ -1,14 +1,25 @@
-import React, {useEffect, useState} from 'react'
+import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import {
+    Button,
+    Center,
+    Flex,
+    Heading,
+    Text,
+    Textarea,
+    useColorModeValue,
+    VStack,
+} from "@chakra-ui/react";
 import abi from "../utils/WavePortal.json";
-import { Button, Center, Flex, Heading, Text, useColorModeValue } from '@chakra-ui/react';
 
 const Main = () => {
     let [waveCount, setWaveCount] = useState(0);
     const [currentAccount, setCurrentAccount] = useState("");
-    
-
-    const contractAddress = "0xb8E9254121F845AC50fB4A7B66f68FdA7fE515b9";
+    const [allWaves, setAllWaves] = useState([]);
+    const [message, setMessage] = useState("");
+    const bg = useColorModeValue("red.100", "pink.800");
+    const textColor = useColorModeValue("black", "white");
+    const contractAddress = "0xD5539e2BAf484774708e5511F7033E9953a338d5";
     const contractABI = abi.abi;
 
     const waveUpdater = () => {
@@ -17,27 +28,26 @@ const Main = () => {
             if (ethereum) {
                 const provider = new ethers.providers.Web3Provider(ethereum);
                 const signer = provider.getSigner();
-                const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
-                wavePortalContract.getTotalWaves().then(result => {
-                    setWaveCount(result.toNumber());
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-            }
-            else {
+                const wavePortalContract = new ethers.Contract(
+                    contractAddress,
+                    contractABI,
+                    signer
+                );
+                wavePortalContract
+                    .getTotalWaves()
+                    .then((result) => {
+                        setWaveCount(result.toNumber());
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
+            } else {
                 console.log("Ethereum object doesn't exist!");
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.log(error);
         }
-
-    }
-
-    useEffect(() => {
-        waveUpdater();
-    }, [waveCount]);
+    };
 
     const checkIfWalletIsConnected = async () => {
         try {
@@ -50,15 +60,14 @@ const Main = () => {
                 console.log("We have the ethereum object", ethereum);
             }
 
-            /*
-             * Check if we're authorized to access the user's wallet
-             */ 
             const accounts = await ethereum.request({ method: "eth_accounts" });
 
             if (accounts.length !== 0) {
                 const account = accounts[0];
                 console.log("Found an authorized account:", account);
                 setCurrentAccount(account);
+                getAllWaves();
+                waveUpdater();
             } else {
                 console.log("No authorized account found");
             }
@@ -67,9 +76,6 @@ const Main = () => {
         }
     };
 
-    /**
-     * Implement your connectWallet method here
-     */
     const connectWallet = async () => {
         try {
             const { ethereum } = window;
@@ -92,72 +98,176 @@ const Main = () => {
 
     const wave = async () => {
         try {
-          const { ethereum } = window;
-    
-          if (ethereum) {
-            const provider = new ethers.providers.Web3Provider(ethereum);
-            const signer = provider.getSigner();
-            const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
-            
-            /*
-            * Execute the actual wave from your smart contract
-            */
-            const waveTxn = await wavePortalContract.doWave();
-            console.log("Mining...", waveTxn.hash);
-    
-            await waveTxn.wait();
-            console.log("Mined -- ", waveTxn.hash);
-            
-            setWaveCount(++waveCount);
-            console.log("wavecount is now", waveCount);
-        } else {
-            console.log("Ethereum object doesn't exist!");
-        }
+            const { ethereum } = window;
+
+            if (ethereum) {
+                const provider = new ethers.providers.Web3Provider(ethereum);
+                const signer = provider.getSigner();
+                const wavePortalContract = new ethers.Contract(
+                    contractAddress,
+                    contractABI,
+                    signer
+                );
+
+                setMessage(message);
+                const waveTxn = await wavePortalContract.wave(message);
+                setMessage("");
+                console.log("Mining...", waveTxn.hash);
+
+                await waveTxn.wait();
+                console.log("Mined -- ", waveTxn.hash);
+
+                setWaveCount(++waveCount);
+                getAllWaves();
+                console.log("wave count is now", waveCount);
+            } else {
+                console.log("Ethereum object doesn't exist!");
+            }
         } catch (error) {
-          console.log(error);
+            console.log(error);
         }
-      }
+    };
+
+    const getAllWaves = async () => {
+        try {
+            const { ethereum } = window;
+            if (ethereum) {
+                const provider = new ethers.providers.Web3Provider(ethereum);
+                const signer = provider.getSigner();
+                const wavePortalContract = new ethers.Contract(
+                    contractAddress,
+                    contractABI,
+                    signer
+                );
+
+                const waves = await wavePortalContract.getAllWaves();
+
+                let wavesCleaned = [];
+                waves.forEach((wave) => {
+                    wavesCleaned.push({
+                        address: wave.waver,
+                        timestamp: new Date(wave.timestamp * 1000),
+                        message: wave.message,
+                    });
+                });
+
+                setAllWaves(wavesCleaned);
+            } else {
+                console.log("Ethereum object doesn't exist!");
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     useEffect(() => {
         checkIfWalletIsConnected();
     }, []);
 
     return (
-        <Center mt="32">
+        <Center mt="24">
             <Flex flexDirection="column">
-                <Heading textAlign="center" size="3xl" fontFamily="Quicksand"> Hola, Amigos! </Heading>
-
-                <Text color={useColorModeValue("purple","pink")} my="3" fontSize="1.5em" >
+                <Heading textAlign="center" size="3xl" fontFamily="Quicksand">
+                    Hola, Amigos!
+                </Heading>
+        <Center flexDir="column">
+                <Text
+                    color={useColorModeValue("purple", "pink")}
+                    my="4"
+                    fontSize="1.5em"
+                >
                     I am Priyansh.
-                    <br />
-                    I like working with the Web.
+                    <br />I like working with the Web.
                 </Text>
 
-                <Text textAlign="center" className="waves" my="2" fontFamily="nunito" fontSize="1.3em">
+                <Text
+                    textAlign="center"
+                    className="waves"
+                    my="2"
+                    fontFamily="nunito"
+                    fontSize="1.3em"
+                >
                     Total waves : {waveCount}
                 </Text>
-                <Center>
-                <Button className="waveButton" onClick={wave} my="6" bg="teal" color="white" _hover={{
-                    bg : "teal.400"
-                }} minW="14vw" maxW="20vw" mt="5" fontSize="1.1em">
-                    Wave at Me
-                </Button>
-                </Center>
 
-                
+
+                <Textarea
+                    value={message}
+                    w="50vw"
+                    onChange={(e) => setMessage(e.target.value)}
+                    my="4"
+                    borderColor="gray.300"
+                    focusBorderColor="gray.700"
+                    placeholder="Write your message here"
+                    rows={10}
+                    cols={40}
+                />
+    </Center>
+                <Center>
+                    <Button
+                        className="waveButton"
+                        onClick={wave}
+                        bg="pink.800"
+                        color="white"
+                        _hover={{
+                            bg: "purple.400",
+                        }}
+                        minW="14vw"
+                        maxW="20vw"
+                        my="5"
+                        fontSize="1.1em"
+                    >
+                        Wave at Me
+                    </Button>
+                </Center>
 
                 {!currentAccount && (
                     <Center>
-                    <Button onClick={connectWallet} minW="14vw" maxW="20vw" fontSize="1.1em" bg="pink.500" color="white" _hover={{
-                        bg : "purple.400"
-                    }}>
-                        Connect Wallet
-                    </Button>
+                        <Button
+                            onClick={connectWallet}
+                            minW="14vw"
+                            maxW="20vw"
+                            fontSize="1.1em"
+                            bg="teal"
+                            mb="5"
+                            color="white"
+                            _hover={{
+                                bg: "teal.400",
+                            }}
+                        >
+                            Connect Wallet
+                        </Button>
                     </Center>
                 )}
-                </Flex>
+
+                {allWaves.map((wave, index) => {
+                    return (
+                        <VStack
+                            key={index}
+                            bg={bg}
+                            minW="60vw"
+                            my="8"
+                            color={textColor}
+                            borderRadius="5"
+                            p="4"
+                            spacing="4"
+                        >
+                            <Text>
+                                <strong>Address :</strong> {wave.address}
+                            </Text>
+                            <Text>
+                                <strong>Timestamp :</strong>{" "}
+                                {wave.timestamp.toString()}
+                            </Text>
+                            <Text>
+                                <strong>Message :</strong> {wave.message}
+                            </Text>
+                        </VStack>
+                    );
+                })}
+            </Flex>
         </Center>
     );
-}
+};
 
-export default Main
+export default Main;

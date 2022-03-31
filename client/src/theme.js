@@ -21,8 +21,8 @@ const breakpoints = {
 };
 
 const fonts = {
-    nunito : "Nunito",
-    body : "Quicksand"
+    nunito: "Nunito",
+    body: "Quicksand",
 };
 
 const components = {
