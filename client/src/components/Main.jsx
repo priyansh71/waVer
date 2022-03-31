@@ -19,7 +19,7 @@ const Main = () => {
     const [message, setMessage] = useState("");
     const bg = useColorModeValue("red.100", "pink.800");
     const textColor = useColorModeValue("black", "white");
-    const contractAddress = "0xD5539e2BAf484774708e5511F7033E9953a338d5";
+    const contractAddress = "0xD2575CC1d500ED5B338a31B80cE116bfC2Bc571f";
     const contractABI = abi.abi;
 
     const waveUpdater = () => {
@@ -170,39 +170,38 @@ const Main = () => {
                 <Heading textAlign="center" size="3xl" fontFamily="Quicksand">
                     Hola, Amigos!
                 </Heading>
-        <Center flexDir="column">
-                <Text
-                    color={useColorModeValue("purple", "pink")}
-                    my="4"
-                    fontSize="1.5em"
-                >
-                    I am Priyansh.
-                    <br />I like working with the Web.
-                </Text>
+                <Center flexDir="column">
+                    <Text
+                        color={useColorModeValue("purple", "pink")}
+                        my="4"
+                        fontSize="1.5em"
+                    >
+                        I am Priyansh.
+                        <br />I like working with the Web.
+                    </Text>
 
-                <Text
-                    textAlign="center"
-                    className="waves"
-                    my="2"
-                    fontFamily="nunito"
-                    fontSize="1.3em"
-                >
-                    Total waves : {waveCount}
-                </Text>
+                    <Text
+                        textAlign="center"
+                        className="waves"
+                        my="2"
+                        fontFamily="nunito"
+                        fontSize="1.3em"
+                    >
+                        Total waves : {waveCount}
+                    </Text>
 
-
-                <Textarea
-                    value={message}
-                    w="50vw"
-                    onChange={(e) => setMessage(e.target.value)}
-                    my="4"
-                    borderColor="gray.300"
-                    focusBorderColor="gray.700"
-                    placeholder="Write your message here"
-                    rows={10}
-                    cols={40}
-                />
-    </Center>
+                    <Textarea
+                        value={message}
+                        w="50vw"
+                        onChange={(e) => setMessage(e.target.value)}
+                        my="4"
+                        borderColor="gray.300"
+                        focusBorderColor="gray.700"
+                        placeholder="Write your message here"
+                        rows={10}
+                        cols={40}
+                    />
+                </Center>
                 <Center>
                     <Button
                         className="waveButton"
@@ -210,7 +209,7 @@ const Main = () => {
                         bg="pink.800"
                         color="white"
                         _hover={{
-                            bg: "purple.400",
+                            bg: "pink.400",
                         }}
                         minW="14vw"
                         maxW="20vw"
