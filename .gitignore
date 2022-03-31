@@ -1,0 +1,6 @@
+*/.env
+*/.DS_Store
+*/node_nodules
+*/.git
+client/node_modules
+contract/node_modules
