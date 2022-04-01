@@ -1,58 +1,72 @@
 // SPDX-License-Identifier: UNLICENSED
 
 pragma solidity ^0.8.0;
-
 import "hardhat/console.sol";
 
 contract WavePortal {
     uint256 totalWaves;
-    struct wave {
+    
+    uint256 private seed;
+
+    event NewWave(address indexed from, uint256 timestamp, string message);
+
+    struct Wave {
         address waver;
-        uint256 waves;
+        string message;
+        uint256 timestamp;
     }
 
-    wave[] public stats;
+    mapping(address => uint256) public lastWavedAt;
+    Wave[] waves;
 
-    constructor() {
-        console.log("Hello, This is a contract made at 3am!");
+    constructor() payable {
+        console.log("I am a smart contract.");
+        /* setting initial seed */
+        seed = (block.timestamp + block.difficulty) % 100;
     }
 
-    function doWave() public {
-        if(stats.length == 0){
-            wave memory newWaver = wave(msg.sender,1);
-            stats.push(newWaver);
-        }
-        else {
-            for(uint i = 0;i<stats.length;i++){
-                if(stats[i].waver == msg.sender){
-                    stats[i].waves += 1;
-                }
-                else{
-                    wave memory newWaver = wave(msg.sender,1);
-                    stats.push(newWaver);
-                }
-            }
-        }
+    function wave(string memory _message) public {
+        require(
+            lastWavedAt[msg.sender] + 10 seconds < block.timestamp,
+            "Wait 10 seconds."
+        );
+
+        /* Update the current timestamp we have for the user. */
+        lastWavedAt[msg.sender] = block.timestamp;
+
         totalWaves += 1;
         console.log("%s has waved!", msg.sender);
+
+        waves.push(Wave(msg.sender, _message, block.timestamp));
+
+        /* Generate a new seed for the next user that sends a wave .*/
+        seed = (block.difficulty + block.timestamp + seed) % 100;
+
+        console.log("Random # generated: %d", seed);
+
+        /* Give a 40% chance that the user wins the prize. */
+        if (seed <= 40) {
+            console.log("%s won!", msg.sender);
+
+            /* The same code we had before to send the prize. */
+            uint256 prizeAmount = 0.0001 ether;
+            require(
+                prizeAmount <= address(this).balance,
+                "Trying to withdraw more money than the contract has."
+            );
+            (bool success, ) = (msg.sender).call{value: prizeAmount}("");
+            require(success, "Failed to withdraw money from contract.");
+        }
+
+        emit NewWave(msg.sender, block.timestamp, _message);
+    }
+
+    function getAllWaves() public view returns (Wave[] memory) {
+        return waves;
     }
 
     function getTotalWaves() public view returns (uint256) {
-      console.log("We have %d total waves!", totalWaves);
-      return totalWaves;
+        console.log("We have %d total waves!", totalWaves);
+        return totalWaves;
     }
-
-    function VIP() public view returns (address){
-        address vip;
-        uint maxWaves = 0;
-        for(uint i = 0;i<stats.length;i++){
-            if(stats[i].waves > maxWaves){
-                vip = stats[i].waver;
-                maxWaves = stats[i].waves;
-            }
-        }
-        console.log("The VIP is %s.", vip);
-        return vip;
-    }
-
 }
