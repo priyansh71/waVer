@@ -11,15 +11,17 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import abi from "../utils/WavePortal.json";
+import { Greeting } from "./Greeting";
 
 const Main = () => {
     let [waveCount, setWaveCount] = useState(0);
     const [currentAccount, setCurrentAccount] = useState("");
     const [allWaves, setAllWaves] = useState([]);
     const [message, setMessage] = useState("");
-    const bg = useColorModeValue("red.100", "pink.800");
-    const textColor = useColorModeValue("black", "white");
-    const contractAddress = "0xD2575CC1d500ED5B338a31B80cE116bfC2Bc571f";
+    const bg = useColorModeValue("red.100", "teal.100");
+    const buttonBg = useColorModeValue("red.800", "teal.800");
+    const buttonBgHover = useColorModeValue("red.600", "teal.600");
+    const contractAddress = "0x1e0f2bABE49C9545c6280e4f593ba34f8753b232";
     const contractABI = abi.abi;
 
     const waveUpdater = () => {
@@ -110,7 +112,9 @@ const Main = () => {
                 );
 
                 setMessage(message);
-                const waveTxn = await wavePortalContract.wave(message);
+                const waveTxn = await wavePortalContract.wave(message, {
+                    gasLimit: 1000000,
+                });
                 setMessage("");
                 console.log("Mining...", waveTxn.hash);
 
@@ -162,24 +166,44 @@ const Main = () => {
 
     useEffect(() => {
         checkIfWalletIsConnected();
+        let wavePortalContract;
+
+        const onNewWave = (from, timestamp, message) => {
+            console.log("NewWave", from, timestamp, message);
+            setAllWaves((prevState) => [
+                ...prevState,
+                {
+                    address: from,
+                    timestamp: new Date(timestamp * 1000),
+                    message: message,
+                },
+            ]);
+        };
+
+        if (window.ethereum) {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+
+            wavePortalContract = new ethers.Contract(
+                contractAddress,
+                contractABI,
+                signer
+            );
+            wavePortalContract.on("NewWave", onNewWave);
+        }
+
+        return () => {
+            if (wavePortalContract) {
+                wavePortalContract.off("NewWave", onNewWave);
+            }
+        };
     }, []);
 
     return (
-        <Center mt="24">
+        <Center mt="16">
             <Flex flexDirection="column">
-                <Heading textAlign="center" size="3xl" fontFamily="Quicksand">
-                    Hola, Amigos!
-                </Heading>
-                <Center flexDir="column">
-                    <Text
-                        color={useColorModeValue("purple", "pink")}
-                        my="4"
-                        fontSize="1.5em"
-                    >
-                        I am Priyansh.
-                        <br />I like working with the Web.
-                    </Text>
-
+                <Greeting />
+                <Center flexDir="column" my="3">
                     <Text
                         textAlign="center"
                         className="waves"
@@ -192,9 +216,11 @@ const Main = () => {
 
                     <Textarea
                         value={message}
-                        w="50vw"
+                        spellCheck="false"
+                        w="40vw"
                         onChange={(e) => setMessage(e.target.value)}
                         my="4"
+                        fontSize="lg"
                         borderColor="gray.300"
                         focusBorderColor="gray.700"
                         placeholder="Write your message here"
@@ -206,10 +232,10 @@ const Main = () => {
                     <Button
                         className="waveButton"
                         onClick={wave}
-                        bg="pink.800"
+                        bg={buttonBg}
                         color="white"
                         _hover={{
-                            bg: "pink.400",
+                            bg: buttonBgHover,
                         }}
                         minW="14vw"
                         maxW="20vw"
@@ -246,20 +272,44 @@ const Main = () => {
                             bg={bg}
                             minW="60vw"
                             my="8"
-                            color={textColor}
+                            color="black"
                             borderRadius="5"
-                            p="4"
+                            fontSize="1.2em"
+                            p="6"
                             spacing="4"
                         >
                             <Text>
-                                <strong>Address :</strong> {wave.address}
+                                <strong
+                                    style={{
+                                        fontSize: "1.2em",
+                                        padding: "5px",
+                                    }}
+                                >
+                                    Address :
+                                </strong>{" "}
+                                {wave.address}
                             </Text>
                             <Text>
-                                <strong>Timestamp :</strong>{" "}
+                                <strong
+                                    style={{
+                                        fontSize: "1.2em",
+                                        padding: "5px",
+                                    }}
+                                >
+                                    Timestamp :
+                                </strong>{" "}
                                 {wave.timestamp.toString()}
                             </Text>
                             <Text>
-                                <strong>Message :</strong> {wave.message}
+                                <strong
+                                    style={{
+                                        fontSize: "1.2em",
+                                        padding: "5px",
+                                    }}
+                                >
+                                    Message :
+                                </strong>{" "}
+                                {wave.message}
                             </Text>
                         </VStack>
                     );
